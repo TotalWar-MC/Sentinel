@@ -66,15 +66,16 @@ public class TotalWarCommands {
 	
 	@Command (aliases = {"tws"}, modifiers = {"reglist"}, usage = "reglist <town|nation> [name] [page]",
 			desc = "Lists all regiments belonging to a town or nation.", permission = "twsentinel.reglist",
-			min = 2, max = 3)
+			min = 2, max = 4)
 	public void listRegiments(CommandContext args, CommandSender sender) {
-		//TODO pages
 		Town town = null;
 		Nation nation = null;
+		int pageArgument = 2;
 		if(args.getString(1).equalsIgnoreCase("town") || args.getString(1).equalsIgnoreCase("t")) {
 			if(args.argsLength() > 2 && (sender.hasPermission("twsentinel.reglist.others") || !(sender instanceof Player))) {
 				try {
 					town = TownyUniverse.getDataSource().getTown(args.getString(2));
+					pageArgument = 3;
 				} catch(NotRegisteredException e) {
 					sender.sendMessage("§6§l [TW-Sentinel] §c There is no town named " + args.getString(2) + "!");
 					return;
@@ -101,6 +102,7 @@ public class TotalWarCommands {
 			if(args.argsLength() > 2 && (sender.hasPermission("twsentinel.reglist.others") || !(sender instanceof Player))) {
 				try {
 					nation = TownyUniverse.getDataSource().getNation(args.getString(2));
+					pageArgument = 3;
 				} catch(NotRegisteredException e) {
 					sender.sendMessage("§6§l [TW-Sentinel] §c There is no nation named " + args.getString(2) + "!");
 					return;
@@ -127,6 +129,12 @@ public class TotalWarCommands {
 			sender.sendMessage("§6§l [TW-Sentinel] §c Please specify whether you want to list a town's (town/t) or nation's (nation/n) regiments.");
 			return;
 		}
+		int page = 1;
+		try {
+			if(args.argsLength() > pageArgument) page = args.getInteger(pageArgument);
+		} catch(NumberFormatException e) {
+			sender.sendMessage("§6§l [TW-Sentinel] §c " + args.getString(pageArgument) + " is not a number!");
+		}
 		List<SentinelRegiment> regs = null;
 		String head = null;
 		if(town != null) {
@@ -143,6 +151,6 @@ public class TotalWarCommands {
 		for(SentinelRegiment reg : regs) {
 			paginator.addLine(reg.getTown().getFormattedName() + ": " + reg.getName() + "-" + reg.getSoldiers().size());
 		}
-		//TODO pages, send the message
+		paginator.sendPage(sender, page);
 	}
 }
